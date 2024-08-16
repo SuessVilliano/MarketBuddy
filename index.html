@@ -125,7 +125,7 @@
             max-height: 60vh;
             overflow-y: auto;
             color: white; /* Default color for dark theme */
-            width: 95%; /* Adjust width to fit more content */
+            width: 90%; /* Adjust width to fit more content */
             margin: 0 auto; /* Center the box */
         }
 
@@ -224,8 +224,8 @@
         }
 
         .type-box textarea {
-            width: 60%; /* Adjusted for better mobile experience */
-            max-width: 400px; /* Limit the maximum width */
+            width: 50%; /* Adjusted for better mobile experience */
+            max-width: 300px; /* Limit the maximum width */
             min-width: 200px; /* Minimum width */
             display: inline-block;
             vertical-align: middle;
@@ -253,6 +253,7 @@
             align-items: center;
             justify-content: center;
             color: white;
+            margin-right: 10px; /* Space between the mic and text box */
         }
 
         .dropdown-container {
@@ -265,15 +266,16 @@
         }
 
         .save-btn {
-            position: absolute;
-            top: -45px;
-            right: 0;
+            display: block;
+            width: 100%;
+            margin: 20px auto 0;
             padding: 5px 10px;
             background-color: var(--primary-color);
             color: var(--text-color);
             border-radius: 5px;
             cursor: pointer;
             font-size: 12px;
+            text-align: center;
             z-index: 1000;
         }
 
@@ -292,13 +294,16 @@
 
         .dropdown-menu {
             position: absolute;
-            bottom: 50px;
-            right: 10px;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
             background-color: var(--secondary-color);
             padding: 10px;
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
             display: none;
+            width: 80%;
+            max-width: 300px;
         }
 
         .dropdown-menu.show {
@@ -342,12 +347,6 @@
                     <label for="image-upload">Upload Image</label>
                     <input type="file" id="image-upload" accept="image/*">
                 </div>
-                <div class="record-container">
-                    <button class="record-btn" id="record-btn" onclick="toggleRecording()">
-                        <i class="fas fa-microphone"></i>
-                    </button>
-                    <label for="ai-select">Select AI</label>
-                </div>
                 <div class="save-btn" onclick="toggleSaveDropdown()">Save</div>
                 <div class="dropdown-menu" id="save-dropdown">
                     <select id="save-folder-select">
@@ -372,6 +371,9 @@
         </div>
     </div>
     <div class="type-box">
+        <button class="record-btn" id="record-btn" onclick="toggleRecording()">
+            <i class="fas fa-microphone"></i>
+        </button>
         <textarea id="text-prompt" rows="2" placeholder="Type your prompt here..."></textarea>
         <button id="submit-btn" onclick="submitPrompt()">Submit</button>
     </div>
