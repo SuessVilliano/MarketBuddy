@@ -69,10 +69,12 @@
 
         .content {
             margin-top: 20px;
+            position: relative;
         }
 
         .form-group {
             margin-bottom: 15px;
+            position: relative;
         }
 
         .form-group label {
@@ -168,6 +170,20 @@
             display: inline-block;
         }
 
+        .typing-indicator {
+            font-size: 16px;
+            color: var(--text-color);
+            display: inline-block;
+            animation: blink 1.5s infinite;
+            margin-left: 5px;
+        }
+
+        @keyframes blink {
+            0% { opacity: 0.2; }
+            20% { opacity: 1; }
+            100% { opacity: 0.2; }
+        }
+
         .tab-content {
             display: none;
         }
@@ -201,18 +217,24 @@
             background-color: var(--secondary-color);
             padding: 10px;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            justify-content: center; /* Center the text box */
         }
 
         .type-box textarea {
-            width: calc(100% - 120px);
+            width: 80%; /* Reduce the width on desktop */
+            max-width: 600px; /* Limit the maximum width */
+            min-width: 300px; /* Minimum width */
             display: inline-block;
             vertical-align: middle;
+            resize: vertical; /* Allow resizing vertically */
         }
 
         .type-box button {
             width: 100px;
             display: inline-block;
             vertical-align: middle;
+            margin-left: 10px; /* Add space between the textarea and button */
         }
 
         .dropdown-container {
@@ -222,6 +244,47 @@
             background-color: var(--secondary-color);
             padding: 10px;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .save-btn {
+            position: absolute;
+            top: -45px;
+            right: 0;
+            padding: 5px 10px;
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            z-index: 1000;
+        }
+
+        .folder-entry {
+            cursor: pointer;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: var(--box-color);
+            border-radius: 5px;
+            color: var(--text-color);
+        }
+
+        .folder-entry:hover {
+            background-color: var(--hover-color);
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            bottom: 50px;
+            right: 10px;
+            background-color: var(--secondary-color);
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: none;
+        }
+
+        .dropdown-menu.show {
+            display: block;
         }
 
         .download-link {
@@ -259,6 +322,14 @@
                     <label for="voice-record">Record Voice</label>
                     <button id="record-btn" onclick="toggleRecording()">Start Recording</button>
                 </div>
+                <div class="save-btn" onclick="toggleSaveDropdown()">Save</div>
+                <div class="dropdown-menu" id="save-dropdown">
+                    <select id="save-folder-select">
+                        <option value="" disabled selected>Select Folder</option>
+                        <!-- Folders will be populated here -->
+                    </select>
+                    <button onclick="createFolder()">New Folder</button>
+                </div>
             </div>
         </div>
         <div class="tab-content" id="history">
@@ -276,7 +347,7 @@
     </div>
     <div class="type-box">
         <textarea id="text-prompt" rows="2" placeholder="Type your prompt here..."></textarea>
-        <button onclick="submitPrompt()">Submit</button>
+        <button id="submit-btn" onclick="submitPrompt()">Submit</button>
     </div>
     <div class="dropdown-container">
         <label for="ai-select">Select AI Service</label>
@@ -295,7 +366,7 @@
         let audioChunks = [];
         let isRecording = false;
 
-        function toggleTheme() {
+        async function toggleTheme() {
             const body = document.body;
             const themeIcon = document.getElementById('theme-icon');
 
@@ -321,10 +392,10 @@
             document.getElementById(tabId).classList.add('active');
         }
 
-        function toggleRecording() {
+        async function toggleRecording() {
             const recordBtn = document.getElementById('record-btn');
             if (!isRecording) {
-                startRecording();
+                await startRecording();
                 recordBtn.textContent = 'Stop Recording';
                 recordBtn.classList.add('recording');
             } else {
@@ -335,40 +406,44 @@
             isRecording = !isRecording;
         }
 
-        function startRecording() {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    mediaRecorder = new MediaRecorder(stream);
-                    mediaRecorder.start();
-                    audioChunks = [];
-                    mediaRecorder.addEventListener("dataavailable", event => {
-                        audioChunks.push(event.data);
-                    });
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.start();
+                audioChunks = [];
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
                 });
+            } catch (error) {
+                console.error('Error accessing microphone:', error);
+                alert('Microphone access is required to use this feature.');
+            }
         }
 
         function stopRecording() {
-            mediaRecorder.stop();
-            mediaRecorder.addEventListener("stop", () => {
-                const audioBlob = new Blob(audioChunks);
-                const formData = new FormData();
-                formData.append("audio", audioBlob, "recording.wav");
-                
-                fetch(webhookUrl, {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(result => {
-                    const transcribedText = result.transcription;
-                    document.getElementById('text-prompt').value = transcribedText;
-                    submitPrompt();
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    addChatEntry("Market Buddy", "An error occurred while processing your request.");
+            if (mediaRecorder) {
+                mediaRecorder.stop();
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    const formData = new FormData();
+                    formData.append("audio", audioBlob, "recording.wav");
+                    
+                    fetch(webhookUrl, {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        const transcribedText = result.transcription || 'Transcription failed.';
+                        document.getElementById('text-prompt').value = transcribedText; // Place transcription in user input box
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while transcribing the audio.');
+                    });
                 });
-            });
+            }
         }
 
         function submitPrompt() {
@@ -376,7 +451,7 @@
             const prompt = document.getElementById('text-prompt').value;
             const imageUpload = document.getElementById('image-upload').files[0];
 
-            if (prompt.trim() === "") return; // Prevent submission of empty prompt
+            if (prompt.trim() === "" && !imageUpload) return; // Prevent submission of empty prompt and no image
 
             addChatEntry("Me", prompt);
 
@@ -387,18 +462,31 @@
                 formData.append('image', imageUpload);
             }
 
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.style.backgroundColor = 'var(--button-active-color)'; // Change button color on click
+
+            // Add typing indicator for Market Buddy
+            const typingIndicator = document.createElement('div');
+            typingIndicator.classList.add('typing-indicator');
+            typingIndicator.textContent = 'Market Buddy is typing...';
+            document.getElementById('response').appendChild(typingIndicator);
+
             fetch(webhookUrl, {
                 method: 'POST',
                 body: formData
             })
             .then(response => response.json())
             .then(data => {
+                document.getElementById('response').removeChild(typingIndicator);
                 addChatEntry("Market Buddy", data.choices ? data.choices[0].text : 'No response');
                 saveToHistory(prompt, data);
+                submitBtn.style.backgroundColor = ''; // Reset button color after submission
             })
             .catch(error => {
+                document.getElementById('response').removeChild(typingIndicator);
                 console.error('Error:', error);
                 addChatEntry("Market Buddy", "An error occurred while processing your request.");
+                submitBtn.style.backgroundColor = ''; // Reset button color after error
             });
 
             document.getElementById('text-prompt').value = '';
@@ -439,19 +527,44 @@
             if (folderName) {
                 const folderContainer = document.getElementById('folder-container');
                 const folderDiv = document.createElement('div');
-                folderDiv.className = 'folder';
+                folderDiv.className = 'folder-entry';
                 folderDiv.textContent = folderName;
+                folderDiv.onclick = function() {
+                    openFolder(folderName);
+                };
                 folderContainer.appendChild(folderDiv);
+
+                // Add folder to save dropdown
+                const saveSelect = document.getElementById('save-folder-select');
+                const option = document.createElement('option');
+                option.value = folderName;
+                option.textContent = folderName;
+                saveSelect.appendChild(option);
             }
         }
 
-        function saveToHistory(prompt, data) {
-            conversationHistory.push({ prompt, response: data });
+        function openFolder(folderName) {
+            showTab('history');
             const historyContent = document.getElementById('history-content');
-            const historyEntry = document.createElement('div');
-            historyEntry.className = 'history-entry';
-            historyEntry.innerHTML = `<strong>Prompt:</strong> ${prompt}<br><strong>Response:</strong> ${data.choices ? data.choices[0].text : 'No response'}`;
-            historyContent.appendChild(historyEntry);
+            historyContent.innerHTML = `<h3>${folderName}</h3>`;
+            const folderData = conversationHistory.filter(entry => entry.folder === folderName);
+            folderData.forEach(entry => {
+                const historyEntry = document.createElement('div');
+                historyEntry.className = 'history-entry';
+                historyEntry.innerHTML = `<strong>Prompt:</strong> ${entry.prompt}<br><strong>Response:</strong> ${entry.response.choices ? entry.response.choices[0].text : 'No response'}`;
+                historyContent.appendChild(historyEntry);
+            });
+        }
+
+        function saveToHistory(prompt, data) {
+            const folderName = document.getElementById('save-folder-select').value;
+            if (!folderName) return;
+            conversationHistory.push({ folder: folderName, prompt, response: data });
+        }
+
+        function toggleSaveDropdown() {
+            const dropdownMenu = document.getElementById('save-dropdown');
+            dropdownMenu.classList.toggle('show');
         }
     </script>
 </body>
