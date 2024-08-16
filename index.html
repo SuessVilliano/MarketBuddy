@@ -39,8 +39,7 @@
         }
 
         .container {
-            max-width: 1200px;
-            margin: auto;
+            max-width: 100%; /* Max width set to 100% for full-width responsiveness */
             padding: 20px;
         }
 
@@ -126,6 +125,8 @@
             max-height: 60vh;
             overflow-y: auto;
             color: white; /* Default color for dark theme */
+            width: 95%; /* Adjust width to fit more content */
+            margin: 0 auto; /* Center the box */
         }
 
         .response img,
@@ -218,23 +219,40 @@
             padding: 10px;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
             display: flex;
-            justify-content: center; /* Center the text box */
+            justify-content: center;
+            align-items: center; /* Center the items vertically */
         }
 
         .type-box textarea {
-            width: 80%; /* Reduce the width on desktop */
-            max-width: 600px; /* Limit the maximum width */
-            min-width: 300px; /* Minimum width */
+            width: 60%; /* Adjusted for better mobile experience */
+            max-width: 400px; /* Limit the maximum width */
+            min-width: 200px; /* Minimum width */
             display: inline-block;
             vertical-align: middle;
             resize: vertical; /* Allow resizing vertically */
         }
 
         .type-box button {
-            width: 100px;
+            width: 80px;
             display: inline-block;
             vertical-align: middle;
             margin-left: 10px; /* Add space between the textarea and button */
+            padding: 8px;
+            border: 0; /* Remove border */
+            border-radius: 8px;
+        }
+
+        .record-btn {
+            width: 40px; /* Larger for better accessibility */
+            height: 40px;
+            background-color: var(--primary-color);
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
         }
 
         .dropdown-container {
@@ -294,6 +312,12 @@
             display: block;
             margin-top: 5px;
         }
+
+        .record-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -318,9 +342,11 @@
                     <label for="image-upload">Upload Image</label>
                     <input type="file" id="image-upload" accept="image/*">
                 </div>
-                <div class="form-group">
-                    <label for="voice-record">Record Voice</label>
-                    <button id="record-btn" onclick="toggleRecording()">Start Recording</button>
+                <div class="record-container">
+                    <button class="record-btn" id="record-btn" onclick="toggleRecording()">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <label for="ai-select">Select AI</label>
                 </div>
                 <div class="save-btn" onclick="toggleSaveDropdown()">Save</div>
                 <div class="dropdown-menu" id="save-dropdown">
@@ -350,7 +376,7 @@
         <button id="submit-btn" onclick="submitPrompt()">Submit</button>
     </div>
     <div class="dropdown-container">
-        <label for="ai-select">Select AI Service</label>
+        <label for="ai-select">Select AI</label>
         <select id="ai-select">
             <option value="openai">OpenAI</option>
             <option value="gemini">Gemini</option>
@@ -366,7 +392,7 @@
         let audioChunks = [];
         let isRecording = false;
 
-        async function toggleTheme() {
+        function toggleTheme() {
             const body = document.body;
             const themeIcon = document.getElementById('theme-icon');
 
@@ -377,11 +403,13 @@
                 themeIcon.classList.add('fa-sun');
                 localStorage.setItem('theme', 'light');
                 document.getElementById('response').style.color = '#1d1f27'; // Dark text for light mode
+                document.querySelector('.record-btn i').style.color = 'black'; // Change mic icon color to black
             } else {
                 themeIcon.classList.remove('fa-sun');
                 themeIcon.classList.add('fa-moon');
                 localStorage.setItem('theme', 'dark');
                 document.getElementById('response').style.color = '#ffffff'; // White text for dark mode
+                document.querySelector('.record-btn i').style.color = 'white'; // Change mic icon color to white
             }
         }
 
@@ -394,14 +422,15 @@
 
         async function toggleRecording() {
             const recordBtn = document.getElementById('record-btn');
+            const icon = recordBtn.querySelector('i');
             if (!isRecording) {
                 await startRecording();
-                recordBtn.textContent = 'Stop Recording';
-                recordBtn.classList.add('recording');
+                recordBtn.style.backgroundColor = 'red'; // Change color to indicate recording
+                icon.classList.replace('fa-microphone', 'fa-stop'); // Change icon to stop
             } else {
                 stopRecording();
-                recordBtn.textContent = 'Start Recording';
-                recordBtn.classList.remove('recording');
+                recordBtn.style.backgroundColor = 'var(--primary-color)'; // Reset color
+                icon.classList.replace('fa-stop', 'fa-microphone'); // Change icon back to microphone
             }
             isRecording = !isRecording;
         }
