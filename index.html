@@ -39,7 +39,7 @@
         }
 
         .container {
-            max-width: 100%; /* Max width set to 100% for full-width responsiveness */
+            max-width: 100%;
             padding: 20px;
         }
 
@@ -124,9 +124,9 @@
             min-height: 400px;
             max-height: 60vh;
             overflow-y: auto;
-            color: white; /* Default color for dark theme */
-            width: 90%; /* Adjust width to fit more content */
-            margin: 0 auto; /* Center the box */
+            color: white;
+            width: 90%;
+            margin: 0 auto;
         }
 
         .response img,
@@ -220,30 +220,30 @@
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
             display: flex;
             justify-content: center;
-            align-items: center; /* Center the items vertically */
+            align-items: center;
         }
 
         .type-box textarea {
-            width: 50%; /* Adjusted for better mobile experience */
-            max-width: 300px; /* Limit the maximum width */
-            min-width: 200px; /* Minimum width */
+            width: 50%;
+            max-width: 300px;
+            min-width: 200px;
             display: inline-block;
             vertical-align: middle;
-            resize: vertical; /* Allow resizing vertically */
+            resize: vertical;
         }
 
         .type-box button {
             width: 80px;
             display: inline-block;
             vertical-align: middle;
-            margin-left: 10px; /* Add space between the textarea and button */
+            margin-left: 10px;
             padding: 8px;
-            border: 0; /* Remove border */
+            border: 0;
             border-radius: 8px;
         }
 
         .record-btn {
-            width: 40px; /* Larger for better accessibility */
+            width: 40px;
             height: 40px;
             background-color: var(--primary-color);
             border-radius: 50%;
@@ -253,7 +253,7 @@
             align-items: center;
             justify-content: center;
             color: white;
-            margin-right: 10px; /* Space between the mic and text box */
+            margin-right: 10px;
         }
 
         .dropdown-container {
@@ -330,7 +330,7 @@
         <div class="header">
             <img src="https://i.ibb.co/BySvCV2/trade-hybrid-logo.png" alt="Company Logo">
             <h1>Market Buddy</h1>
-            <div class="theme-switch" id="theme-switch" onclick="toggleTheme()">
+            <div class="theme-switch" id="theme-switch">
                 <i id="theme-icon" class="fas fa-moon"></i>
             </div>
         </div>
@@ -371,11 +371,11 @@
         </div>
     </div>
     <div class="type-box">
-        <button class="record-btn" id="record-btn" onclick="toggleRecording()">
+        <button class="record-btn" id="record-btn">
             <i class="fas fa-microphone"></i>
         </button>
         <textarea id="text-prompt" rows="2" placeholder="Type your prompt here..."></textarea>
-        <button id="submit-btn" onclick="submitPrompt()">Submit</button>
+        <button id="submit-btn">Submit</button>
     </div>
     <div class="dropdown-container">
         <label for="ai-select">Select AI</label>
@@ -387,54 +387,59 @@
         </select>
     </div>
     <script>
+        // Constants
         const webhookUrl = 'https://apps.taskmagic.com/api/v1/webhooks/U1x5fIK35IhCjOyexmVUd';
 
+        // State
         let conversationHistory = [];
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
 
-        function toggleTheme() {
-            const body = document.body;
-            const themeIcon = document.getElementById('theme-icon');
+        // DOM Elements
+        const elements = {
+            themeSwitch: document.getElementById('theme-switch'),
+            themeIcon: document.getElementById('theme-icon'),
+            responseArea: document.getElementById('response'),
+            textPrompt: document.getElementById('text-prompt'),
+            submitBtn: document.getElementById('submit-btn'),
+            recordBtn: document.getElementById('record-btn'),
+            aiSelect: document.getElementById('ai-select'),
+            imageUpload: document.getElementById('image-upload'),
+            saveDropdown: document.getElementById('save-dropdown'),
+            saveFolderSelect: document.getElementById('save-folder-select'),
+            folderContainer: document.getElementById('folder-container'),
+            historyContent: document.getElementById('history-content')
+        };
 
-            body.classList.toggle('light-mode');
-            
-            if (body.classList.contains('light-mode')) {
-                themeIcon.classList.remove('fa-moon');
-                themeIcon.classList.add('fa-sun');
-                localStorage.setItem('theme', 'light');
-                document.getElementById('response').style.color = '#1d1f27'; // Dark text for light mode
-                document.querySelector('.record-btn i').style.color = 'black'; // Change mic icon color to black
-            } else {
-                themeIcon.classList.remove('fa-sun');
-                themeIcon.classList.add('fa-moon');
-                localStorage.setItem('theme', 'dark');
-                document.getElementById('response').style.color = '#ffffff'; // White text for dark mode
-                document.querySelector('.record-btn i').style.color = 'white'; // Change mic icon color to white
-            }
+        // Event Listeners
+        elements.themeSwitch.addEventListener('click', toggleTheme);
+        elements.submitBtn.addEventListener('click', submitPrompt);
+        elements.recordBtn.addEventListener('click', toggleRecording);
+
+        // Functions
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+            const isLightMode = document.body.classList.contains('light-mode');
+            elements.themeIcon.className = isLightMode ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('theme', isLightMode ? 'light' : 'dark');
+            elements.responseArea.style.color = isLightMode ? '#1d1f27' : '#ffffff';
+            elements.recordBtn.querySelector('i').style.color = isLightMode ? 'black' : 'white';
         }
 
         function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.getElementById(tabId).classList.add('active');
         }
 
         async function toggleRecording() {
-            const recordBtn = document.getElementById('record-btn');
-            const icon = recordBtn.querySelector('i');
             if (!isRecording) {
                 await startRecording();
-                recordBtn.style.backgroundColor = 'red'; // Change color to indicate recording
-                icon.classList.replace('fa-microphone', 'fa-stop'); // Change icon to stop
             } else {
                 stopRecording();
-                recordBtn.style.backgroundColor = 'var(--primary-color)'; // Reset color
-                icon.classList.replace('fa-stop', 'fa-microphone'); // Change icon back to microphone
             }
             isRecording = !isRecording;
+            updateRecordButtonUI();
         }
 
         async function startRecording() {
@@ -455,148 +460,168 @@
         function stopRecording() {
             if (mediaRecorder) {
                 mediaRecorder.stop();
-                mediaRecorder.addEventListener("stop", () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    const formData = new FormData();
-                    formData.append("audio", audioBlob, "recording.wav");
-                    
-                    fetch(webhookUrl, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    .then(response => response.json())
-                    .then(result => {
-                        const transcribedText = result.transcription || 'Transcription failed.';
-                        document.getElementById('text-prompt').value = transcribedText; // Place transcription in user input box
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('An error occurred while transcribing the audio.');
-                    });
-                });
+                mediaRecorder.addEventListener("stop", handleRecordingStop);
             }
-        }
+        }function handleRecordingStop() {
+    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+    const formData = new FormData();
+    formData.append("audio", audioBlob, "recording.wav");
+    
+    fetch(webhookUrl, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(result => {
+        const transcribedText = result.transcription || 'Transcription failed.';
+        elements.textPrompt.value = transcribedText;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while transcribing the audio.');
+    });
+}
 
-        function submitPrompt() {
-            const aiService = document.getElementById('ai-select').value;
-            const prompt = document.getElementById('text-prompt').value;
-            const imageUpload = document.getElementById('image-upload').files[0];
+function updateRecordButtonUI() {
+    const icon = elements.recordBtn.querySelector('i');
+    elements.recordBtn.style.backgroundColor = isRecording ? 'red' : 'var(--primary-color)';
+    icon.className = isRecording ? 'fas fa-stop' : 'fas fa-microphone';
+}
 
-            if (prompt.trim() === "" && !imageUpload) return; // Prevent submission of empty prompt and no image
+function submitPrompt() {
+    const aiService = elements.aiSelect.value;
+    const prompt = elements.textPrompt.value.trim();
+    const imageUpload = elements.imageUpload.files[0];
 
-            addChatEntry("Me", prompt);
+    if (prompt === "" && !imageUpload) return;
 
-            const formData = new FormData();
-            formData.append('prompt', prompt);
-            formData.append('service', aiService);
-            if (imageUpload) {
-                formData.append('image', imageUpload);
-            }
+    addChatEntry("Me", prompt);
 
-            const submitBtn = document.getElementById('submit-btn');
-            submitBtn.style.backgroundColor = 'var(--button-active-color)'; // Change button color on click
+    const formData = new FormData();
+    formData.append('prompt', prompt);
+    formData.append('service', aiService);
+    if (imageUpload) {
+        formData.append('image', imageUpload);
+    }
 
-            // Add typing indicator for Market Buddy
-            const typingIndicator = document.createElement('div');
-            typingIndicator.classList.add('typing-indicator');
-            typingIndicator.textContent = 'Market Buddy is typing...';
-            document.getElementById('response').appendChild(typingIndicator);
+    elements.submitBtn.style.backgroundColor = 'var(--button-active-color)';
+    showTypingIndicator();
 
-            fetch(webhookUrl, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('response').removeChild(typingIndicator);
-                addChatEntry("Market Buddy", data.choices ? data.choices[0].text : 'No response');
-                saveToHistory(prompt, data);
-                submitBtn.style.backgroundColor = ''; // Reset button color after submission
-            })
-            .catch(error => {
-                document.getElementById('response').removeChild(typingIndicator);
-                console.error('Error:', error);
-                addChatEntry("Market Buddy", "An error occurred while processing your request.");
-                submitBtn.style.backgroundColor = ''; // Reset button color after error
-            });
+    fetch(webhookUrl, {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideTypingIndicator();
+        const responseText = data.response || 'No response';
+        addChatEntry("Market Buddy", responseText);
+        saveToHistory(prompt, data);
+        elements.submitBtn.style.backgroundColor = '';
+    })
+    .catch(error => {
+        hideTypingIndicator();
+        console.error('Error:', error);
+        addChatEntry("Market Buddy", "An error occurred: " + error.message);
+        elements.submitBtn.style.backgroundColor = '';
+    });
 
-            document.getElementById('text-prompt').value = '';
-        }
+    elements.textPrompt.value = '';
+}
 
-        function addChatEntry(sender, message) {
-            const responseElement = document.getElementById('response');
-            const chatEntry = document.createElement('div');
-            chatEntry.classList.add('chat-entry');
-            chatEntry.classList.add(sender.toLowerCase().replace(" ", "-"));
-            chatEntry.innerHTML = `<strong>${sender}:</strong> ${message} <i class="fas fa-copy copy-icon" onclick="copyToClipboard(this)"></i>`;
-            responseElement.appendChild(chatEntry);
-            responseElement.scrollTop = responseElement.scrollHeight;
+function showTypingIndicator() {
+    const typingIndicator = document.createElement('div');
+    typingIndicator.classList.add('typing-indicator');
+    typingIndicator.textContent = 'Market Buddy is typing...';
+    elements.responseArea.appendChild(typingIndicator);
+}
 
-            // Handle downloadable content (images, audio)
-            if (sender === "Market Buddy") {
-                if (message.startsWith("http")) {
-                    const fileExtension = message.split('.').pop();
-                    if (fileExtension === 'png' || fileExtension === 'jpg' || fileExtension === 'jpeg') {
-                        chatEntry.innerHTML += `<a class="download-link" href="${message}" download="image.${fileExtension}">Download Image</a>`;
-                    } else if (fileExtension === 'wav' || fileExtension === 'mp3') {
-                        chatEntry.innerHTML += `<a class="download-link" href="${message}" download="audio.${fileExtension}">Download Audio</a>`;
-                    }
-                }
-            }
-        }
+function hideTypingIndicator() {
+    const typingIndicator = elements.responseArea.querySelector('.typing-indicator');
+    if (typingIndicator) {
+        elements.responseArea.removeChild(typingIndicator);
+    }
+}
 
-        function copyToClipboard(element) {
-            const text = element.parentElement.textContent.replace("Copy", "").trim();
-            navigator.clipboard.writeText(text)
-                .then(() => {
-                    alert('Text copied to clipboard');
-                });
-        }
+function addChatEntry(sender, message) {
+    const chatEntry = document.createElement('div');
+    chatEntry.classList.add('chat-entry', sender.toLowerCase().replace(" ", "-"));
+    chatEntry.innerHTML = `<strong>${sender}:</strong> ${message} <i class="fas fa-copy copy-icon" onclick="copyToClipboard(this)"></i>`;
+    elements.responseArea.appendChild(chatEntry);
+    elements.responseArea.scrollTop = elements.responseArea.scrollHeight;
 
-        function createFolder() {
-            const folderName = prompt("Enter folder name:");
-            if (folderName) {
-                const folderContainer = document.getElementById('folder-container');
-                const folderDiv = document.createElement('div');
-                folderDiv.className = 'folder-entry';
-                folderDiv.textContent = folderName;
-                folderDiv.onclick = function() {
-                    openFolder(folderName);
-                };
-                folderContainer.appendChild(folderDiv);
+    if (sender === "Market Buddy" && message.startsWith("http")) {
+        addDownloadLink(chatEntry, message);
+    }
+}
 
-                // Add folder to save dropdown
-                const saveSelect = document.getElementById('save-folder-select');
-                const option = document.createElement('option');
-                option.value = folderName;
-                option.textContent = folderName;
-                saveSelect.appendChild(option);
-            }
-        }
+function addDownloadLink(chatEntry, url) {
+    const fileExtension = url.split('.').pop();
+    const isImage = ['png', 'jpg', 'jpeg'].includes(fileExtension);
+    const isAudio = ['wav', 'mp3'].includes(fileExtension);
+    if (isImage || isAudio) {
+        const linkText = isImage ? 'Download Image' : 'Download Audio';
+        chatEntry.innerHTML += `<a class="download-link" href="${url}" download="${isImage ? 'image' : 'audio'}.${fileExtension}">${linkText}</a>`;
+    }
+}
 
-        function openFolder(folderName) {
-            showTab('history');
-            const historyContent = document.getElementById('history-content');
-            historyContent.innerHTML = `<h3>${folderName}</h3>`;
-            const folderData = conversationHistory.filter(entry => entry.folder === folderName);
-            folderData.forEach(entry => {
-                const historyEntry = document.createElement('div');
-                historyEntry.className = 'history-entry';
-                historyEntry.innerHTML = `<strong>Prompt:</strong> ${entry.prompt}<br><strong>Response:</strong> ${entry.response.choices ? entry.response.choices[0].text : 'No response'}`;
-                historyContent.appendChild(historyEntry);
-            });
-        }
+function copyToClipboard(element) {
+    const text = element.parentElement.textContent.replace("Copy", "").trim();
+    navigator.clipboard.writeText(text)
+        .then(() => alert('Text copied to clipboard'))
+        .catch(err => console.error('Failed to copy text: ', err));
+}
 
-        function saveToHistory(prompt, data) {
-            const folderName = document.getElementById('save-folder-select').value;
-            if (!folderName) return;
-            conversationHistory.push({ folder: folderName, prompt, response: data });
-        }
+function createFolder() {
+    const folderName = prompt("Enter folder name:");
+    if (folderName) {
+        addFolderToUI(folderName);
+        addFolderToSaveDropdown(folderName);
+    }
+}
 
-        function toggleSaveDropdown() {
-            const dropdownMenu = document.getElementById('save-dropdown');
-            dropdownMenu.classList.toggle('show');
-        }
-    </script>
-</body>
-</html>
+function addFolderToUI(folderName) {
+    const folderDiv = document.createElement('div');
+    folderDiv.className = 'folder-entry';
+    folderDiv.textContent = folderName;
+    folderDiv.onclick = () => openFolder(folderName);
+    elements.folderContainer.appendChild(folderDiv);
+}
+
+function addFolderToSaveDropdown(folderName) {
+    const option = document.createElement('option');
+    option.value = folderName;
+    option.textContent = folderName;
+    elements.saveFolderSelect.appendChild(option);
+}
+
+function openFolder(folderName) {
+    showTab('history');
+    elements.historyContent.innerHTML = `<h3>${folderName}</h3>`;
+    const folderData = conversationHistory.filter(entry => entry.folder === folderName);
+    folderData.forEach(entry => {
+        const historyEntry = document.createElement('div');
+        historyEntry.className = 'history-entry';
+        historyEntry.innerHTML = `<strong>Prompt:</strong> ${entry.prompt}<br><strong>Response:</strong> ${entry.response.response || 'No response'}`;
+        elements.historyContent.appendChild(historyEntry);
+    });
+}
+
+function saveToHistory(prompt, data) {
+    const folderName = elements.saveFolderSelect.value;
+    if (folderName) {
+        conversationHistory.push({ folder: folderName, prompt, response: data });
+    }
+}
+
+function toggleSaveDropdown() {
+    elements.saveDropdown.classList.toggle('show');
+}
+
+// Initialize
+document.addEventListener('DOMContentLoaded', () => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        toggleTheme();
+    }
+});
