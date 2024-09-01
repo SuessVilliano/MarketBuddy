@@ -41,6 +41,7 @@
         .container {
             max-width: 100%;
             padding: 20px;
+            padding-bottom: 150px; /* Make room for the input area */
         }
 
         .header {
@@ -66,54 +67,6 @@
             color: var(--text-color);
         }
 
-        .content {
-            margin-top: 20px;
-            position: relative;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            position: relative;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group button,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: none;
-            border-radius: 10px;
-            outline: none;
-            background-color: var(--box-color);
-            color: var(--text-color);
-        }
-
-        .form-group button {
-            background: var(--box-border);
-            cursor: pointer;
-            transition: background-color 0.3s, color 0.3s;
-        }
-
-        .form-group button:hover {
-            background: var(--primary-color);
-        }
-
-        .form-group button:active,
-        .form-group button.recording {
-            background-color: var(--button-active-color);
-        }
-
-        .form-group button.success {
-            background-color: var(--button-success-color);
-        }
-
         .response {
             margin-top: 20px;
             padding: 20px;
@@ -127,14 +80,6 @@
             color: white;
             width: 90%;
             margin: 0 auto;
-        }
-
-        .response img,
-        .response audio {
-            max-width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            margin-top: 10px;
         }
 
         .chat-entry {
@@ -155,20 +100,6 @@
             text-align: left;
             background-color: var(--box-color);
             color: var(--text-color);
-        }
-
-        .chat-entry .copy-icon {
-            position: absolute;
-            top: 5px;
-            right: 5px;
-            cursor: pointer;
-            font-size: 14px;
-            color: var(--text-color);
-            display: none;
-        }
-
-        .chat-entry:hover .copy-icon {
-            display: inline-block;
         }
 
         .typing-indicator {
@@ -225,25 +156,51 @@
             margin-bottom: 20px;
         }
 
-        .type-box {
+        .input-area {
             position: fixed;
             bottom: 0;
             width: 100%;
             background-color: var(--secondary-color);
             padding: 10px;
             box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .select-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .select-container label {
+            margin-right: 10px;
+        }
+
+        #ai-select {
+            margin-right: 10px;
+        }
+
+        #image-upload {
+            max-width: 200px;
+        }
+
+        .type-box {
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         .type-box textarea {
-            width: 50%;
-            max-width: 300px;
+            width: 60%;
+            max-width: 500px;
             min-width: 200px;
             display: inline-block;
             vertical-align: middle;
             resize: vertical;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background-color: var(--box-color);
+            color: var(--text-color);
         }
 
         .type-box button {
@@ -251,9 +208,12 @@
             display: inline-block;
             vertical-align: middle;
             margin-left: 10px;
-            padding: 8px;
+            padding: 10px;
             border: 0;
-            border-radius: 8px;
+            border-radius: 10px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
         }
 
         .record-btn {
@@ -268,15 +228,6 @@
             justify-content: center;
             color: white;
             margin-right: 10px;
-        }
-
-        .dropdown-container {
-            position: fixed;
-            bottom: 50px;
-            width: 100%;
-            background-color: var(--secondary-color);
-            padding: 10px;
-            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2);
         }
 
         .save-btn {
@@ -331,17 +282,6 @@
             display: block;
             margin-top: 5px;
         }
-
-        .record-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
-        #image-upload {
-            max-width: 100px;
-            margin-left: 10px;
-        }
     </style>
 </head>
 <body>
@@ -385,22 +325,24 @@
             </div>
         </div>
     </div>
-    <div class="type-box">
-        <button class="record-btn" id="record-btn">
-            <i class="fas fa-microphone"></i>
-        </button>
-        <textarea id="text-prompt" rows="2" placeholder="Type your prompt here..."></textarea>
-        <input type="file" id="image-upload" accept="image/*">
-        <button id="submit-btn">Submit</button>
-    </div>
-    <div class="dropdown-container">
-        <label for="ai-select">Select AI</label>
-        <select id="ai-select">
-            <option value="openai">OpenAI</option>
-            <option value="gemini">Gemini</option>
-            <option value="claude">Claude</option>
-            <option value="clarifi">Clarifi</option>
-        </select>
+    <div class="input-area">
+        <div class="select-container">
+            <label for="ai-select">Select AI</label>
+            <select id="ai-select">
+                <option value="openai">OpenAI</option>
+                <option value="gemini">Gemini</option>
+                <option value="claude">Claude</option>
+                <option value="clarifi">Clarifi</option>
+            </select>
+            <input type="file" id="image-upload" accept="image/*">
+        </div>
+        <div class="type-box">
+            <button class="record-btn" id="record-btn">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <textarea id="text-prompt" rows="2" placeholder="Type your prompt here..."></textarea>
+            <button id="submit-btn">Submit</button>
+        </div>
     </div>
     <script>
         // Constants
@@ -450,12 +392,19 @@
 
         async function toggleRecording() {
             if (!isRecording) {
-                await startRecording();
+                try {
+                    await startRecording();
+                    isRecording = true;
+                    updateRecordButtonUI();
+                } catch (error) {
+                    console.error('Error starting recording:', error);
+                    alert('Failed to start recording. Please check your microphone permissions.');
+                }
             } else {
                 stopRecording();
+                isRecording = false;
+                updateRecordButtonUI();
             }
-            isRecording = !isRecording;
-            updateRecordButtonUI();
         }
 
         async function startRecording() {
@@ -465,16 +414,16 @@
                 mediaRecorder.start();
                 audioChunks = [];
                 mediaRecorder.addEventListener("dataavailable", event => {
-                    audioChunks.push(event.audioChunks.push(event.data);
+                    audioChunks.push(event.data);
                 });
             } catch (error) {
                 console.error('Error accessing microphone:', error);
-                alert('Microphone access is required to use this feature.');
+                throw error;
             }
         }
 
         function stopRecording() {
-            if (mediaRecorder) {
+            if (mediaRecorder && mediaRecorder.state !== "inactive") {
                 mediaRecorder.stop();
                 mediaRecorder.addEventListener("stop", handleRecordingStop);
             }
@@ -501,6 +450,8 @@
         }
 
         function updateRecordButtonUI() {
+            const icon = elements.recordBtn.querySelector('i');
+            elements.recordBtn.style.backgroundColor = isRecording ? 'red' : 'var(--primary-function updateRecordButtonUI() {
             const icon = elements.recordBtn.querySelector('i');
             elements.recordBtn.style.backgroundColor = isRecording ? 'red' : 'var(--primary-color)';
             icon.className = isRecording ? 'fas fa-stop' : 'fas fa-microphone';
